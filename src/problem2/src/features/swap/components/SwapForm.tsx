@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../../i18n/hooks/useTranslation';
 import { useSwapForm } from '../hooks/useSwapForm';
 import { useSwapMutation } from '../hooks/useSwapMutation';
 import type { Balances, SwapField, Token } from '../types/swap.types';
@@ -12,10 +13,10 @@ interface SwapFormProps {
   balances: Balances;
 }
 
-/** Mock gas: small base fee + tiny proportional part. */
 const estimateNetworkFeeUsd = (usd: number) => 0.12 + usd * 0.0003;
 
 export const SwapForm = ({ tokens, balances }: SwapFormProps) => {
+  const { t } = useTranslation();
   const form = useSwapForm({ tokens, balances });
   const swap = useSwapMutation();
   const [pickerField, setPickerField] = useState<SwapField | null>(null);
@@ -47,29 +48,48 @@ export const SwapForm = ({ tokens, balances }: SwapFormProps) => {
       <div className="swap-card">
         <SwapSuccess
           result={swap.data}
-          fromToken={tokens.find((t) => t.symbol === swap.data.fromSymbol)}
-          toToken={tokens.find((t) => t.symbol === swap.data.toSymbol)}
+          fromToken={tokens.find((tok) => tok.symbol === swap.data?.fromSymbol)}
+          toToken={tokens.find((tok) => tok.symbol === swap.data?.toSymbol)}
           onDone={handleDone}
         />
       </div>
     );
   }
 
-  const buttonLabel = isSubmitting ? 'Swapping…' : validation.isValid ? 'Confirm swap' : validation.message;
+  const getValidationLabel = () => {
+    switch (validation.code) {
+      case 'SELECT_TOKEN':
+        return t.validationSelectToken;
+      case 'ENTER_AMOUNT':
+        return t.validationEnterAmount;
+      case 'INSUFFICIENT_BALANCE':
+        return t.validationInsufficientBalance(validation.params?.symbol ?? form.fromToken?.symbol ?? '');
+      case 'AMOUNT_TOO_SMALL':
+        return t.validationAmountTooSmall;
+      default:
+        return validation.message ?? '';
+    }
+  };
+
+  const buttonLabel = isSubmitting
+    ? t.swapping
+    : validation.isValid
+    ? t.confirmSwap
+    : getValidationLabel();
 
   return (
     <form className="swap-card" onSubmit={handleSubmit} noValidate aria-describedby="swap-status">
       <div className="swap-card__header">
-        <h1 className="swap-card__title">Swap</h1>
-        <span className="live-pill" title="Prices refresh every 60s">
-          <span className="live-pill__dot" /> Live prices
+        <h1 className="swap-card__title">{t.swap}</h1>
+        <span className="live-pill" title={t.pricesRefreshHint}>
+          <span className="live-pill__dot" /> {t.livePrices}
         </span>
       </div>
 
       <div className="swap-card__fields">
         <TokenAmountField
           id="input-amount"
-          label="You pay"
+          label={t.youPay}
           value={form.fromAmount}
           token={form.fromToken}
           balance={form.fromBalance}
@@ -88,7 +108,7 @@ export const SwapForm = ({ tokens, balances }: SwapFormProps) => {
           className="flip-button"
           onClick={handleFlip}
           disabled={isSubmitting}
-          aria-label="Switch tokens"
+          aria-label={t.switchTokens}
           style={{ transform: `translate(-50%, -50%) rotate(${flipTurns * 180}deg)` }}
         >
           <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
@@ -105,7 +125,7 @@ export const SwapForm = ({ tokens, balances }: SwapFormProps) => {
 
         <TokenAmountField
           id="output-amount"
-          label="You receive"
+          label={t.youReceive}
           value={form.toAmount}
           token={form.toToken}
           balance={form.toBalance}
@@ -129,7 +149,7 @@ export const SwapForm = ({ tokens, balances }: SwapFormProps) => {
 
       {swap.isError && (
         <div className="alert" role="alert">
-          Swap failed: {swap.error instanceof Error ? swap.error.message : 'Unknown error'}. Please try again.
+          {t.swapFailed}: {swap.error instanceof Error ? swap.error.message : t.unknownError}. {t.pleaseTryAgain}
         </div>
       )}
 

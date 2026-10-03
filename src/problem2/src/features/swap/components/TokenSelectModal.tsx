@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from '../../i18n/hooks/useTranslation';
 import type { Balances, Token } from '../types/swap.types';
 import { formatTokenAmount, formatUsd } from '../utils/swap.utils';
 import { TokenIcon } from './TokenIcon';
@@ -9,7 +10,6 @@ interface TokenSelectModalProps {
   tokens: Token[];
   balances: Balances;
   selectedSymbol?: string;
-  /** Token on the opposite side – shown with a hint since picking it flips the pair. */
   pairedSymbol?: string;
   onSelect: (symbol: string) => void;
   onClose: () => void;
@@ -22,7 +22,6 @@ export const TokenSelectModal = (props: TokenSelectModalProps) => {
   return createPortal(<TokenSelectDialog {...props} />, document.body);
 };
 
-/** Mounted only while open, so search/highlight state resets naturally each time. */
 const TokenSelectDialog = ({
   tokens,
   balances,
@@ -31,6 +30,7 @@ const TokenSelectDialog = ({
   onSelect,
   onClose,
 }: TokenSelectModalProps) => {
+  const { t } = useTranslation();
   const titleId = useId();
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -39,9 +39,8 @@ const TokenSelectDialog = ({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tokens
-      .filter((t) => !q || t.symbol.toLowerCase().includes(q))
+      .filter((tok) => !q || tok.symbol.toLowerCase().includes(q))
       .sort((a, b) => {
-        // Exact match first, then by wallet value
         if (q) {
           const ae = a.symbol.toLowerCase() === q ? 1 : 0;
           const be = b.symbol.toLowerCase() === q ? 1 : 0;
@@ -51,9 +50,8 @@ const TokenSelectDialog = ({
       });
   }, [balances, query, tokens]);
 
-  const popular = useMemo(() => tokens.filter((t) => POPULAR.includes(t.symbol)), [tokens]);
+  const popular = useMemo(() => tokens.filter((tok) => POPULAR.includes(tok.symbol)), [tokens]);
 
-  // Lock page scroll while open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -62,7 +60,6 @@ const TokenSelectDialog = ({
     };
   }, []);
 
-  // Keep the highlighted row visible
   useEffect(() => {
     listRef.current
       ?.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`)
@@ -96,9 +93,9 @@ const TokenSelectDialog = ({
       >
         <header className="modal__header">
           <h2 id={titleId} className="modal__title">
-            Select a token
+            {t.selectAToken}
           </h2>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t.close}>
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
@@ -113,7 +110,7 @@ const TokenSelectDialog = ({
           <input
             id="token-search"
             className="search__input"
-            placeholder="Search by symbol"
+            placeholder={t.searchBySymbol}
             value={query}
             autoFocus
             autoComplete="off"
@@ -128,15 +125,15 @@ const TokenSelectDialog = ({
 
         {!query && popular.length > 0 && (
           <div className="popular">
-            {popular.map((t) => (
+            {popular.map((tok) => (
               <button
-                key={t.symbol}
+                key={tok.symbol}
                 type="button"
-                className={`popular__item ${t.symbol === selectedSymbol ? 'is-selected' : ''}`}
-                onClick={() => onSelect(t.symbol)}
+                className={`popular__item ${tok.symbol === selectedSymbol ? 'is-selected' : ''}`}
+                onClick={() => onSelect(tok.symbol)}
               >
-                <TokenIcon symbol={t.symbol} src={t.iconUrl} size={20} />
-                {t.symbol}
+                <TokenIcon symbol={tok.symbol} src={tok.iconUrl} size={20} />
+                {tok.symbol}
               </button>
             ))}
           </div>
@@ -146,36 +143,36 @@ const TokenSelectDialog = ({
 
         {filtered.length === 0 ? (
           <div className="token-list__empty">
-            <p>No tokens match “{query}”</p>
-            <span>Only tokens with a known price can be swapped.</span>
+            <p>{t.noTokensMatch(query)}</p>
+            <span>{t.onlyPricedTokens}</span>
           </div>
         ) : (
           <ul id="token-list" ref={listRef} className="token-list" role="listbox" aria-labelledby={titleId}>
-            {filtered.map((t, index) => {
-              const balance = balances[t.symbol] ?? 0;
-              const isSelected = t.symbol === selectedSymbol;
+            {filtered.map((tok, index) => {
+              const balance = balances[tok.symbol] ?? 0;
+              const isSelected = tok.symbol === selectedSymbol;
               return (
                 <li
-                  key={t.symbol}
-                  id={`token-option-${t.symbol}`}
+                  key={tok.symbol}
+                  id={`token-option-${tok.symbol}`}
                   role="option"
                   aria-selected={isSelected}
                   data-index={index}
                   className={`token-row ${index === activeIndex ? 'is-active' : ''} ${isSelected ? 'is-selected' : ''}`}
                   onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => onSelect(t.symbol)}
+                  onClick={() => onSelect(tok.symbol)}
                 >
-                  <TokenIcon symbol={t.symbol} src={t.iconUrl} size={36} />
+                  <TokenIcon symbol={tok.symbol} src={tok.iconUrl} size={36} />
                   <div className="token-row__info">
                     <span className="token-row__symbol">
-                      {t.symbol}
-                      {t.symbol === pairedSymbol && <span className="tag">paired</span>}
+                      {tok.symbol}
+                      {tok.symbol === pairedSymbol && <span className="tag">{t.paired}</span>}
                     </span>
-                    <span className="token-row__price">{formatUsd(t.price)}</span>
+                    <span className="token-row__price">{formatUsd(tok.price)}</span>
                   </div>
                   <div className="token-row__balance">
                     <span>{formatTokenAmount(balance)}</span>
-                    <span className="token-row__usd">{formatUsd(balance * t.price)}</span>
+                    <span className="token-row__usd">{formatUsd(balance * tok.price)}</span>
                   </div>
                   {isSelected && (
                     <svg className="token-row__check" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">

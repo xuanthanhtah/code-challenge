@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
-:root {
-  /* Palette */
+:root,
+[data-theme='dark'] {
+  /* Palette - Dark Theme */
   --bg: hsl(240 30% 4%);
   --surface: hsl(240 20% 100% / 0.04);
   --surface-strong: hsl(240 20% 100% / 0.07);
@@ -38,6 +39,34 @@
   color-scheme: dark;
 }
 
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Palette - Light Theme */
+  --bg: hsl(230 45% 97%);
+  --surface: hsl(240 20% 10% / 0.04);
+  --surface-strong: hsl(240 20% 10% / 0.08);
+  --surface-input: hsl(0 0% 100% / 0.9);
+  --border: hsl(240 20% 20% / 0.09);
+  --border-strong: hsl(240 20% 20% / 0.16);
+
+  --text: hsl(240 25% 12%);
+  --text-muted: hsl(240 12% 40%);
+  --text-faint: hsl(240 10% 58%);
+
+  --violet: hsl(262 85% 58%);
+  --indigo: hsl(232 85% 56%);
+  --cyan: hsl(192 95% 42%);
+  --pink: hsl(320 80% 55%);
+  --success: hsl(152 70% 38%);
+  --danger: hsl(355 85% 55%);
+
+  --gradient-primary: linear-gradient(135deg, var(--violet) 0%, var(--indigo) 50%, var(--cyan) 100%);
+  --gradient-text: linear-gradient(90deg, var(--cyan), var(--violet) 60%, var(--pink));
+
+  --shadow-card: 0 24px 60px -15px hsl(240 30% 60% / 0.25), 0 0 0 1px var(--border);
+}
+
 *,
 *::before,
 *::after {
@@ -59,6 +88,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'tnum' 1, 'cv11' 1;
+  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
 }
 
 button,

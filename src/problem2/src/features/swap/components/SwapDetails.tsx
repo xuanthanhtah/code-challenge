@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../../i18n/hooks/useTranslation';
 import type { Token } from '../types/swap.types';
 import { formatTokenAmount, formatUsd } from '../utils/swap.utils';
 
@@ -21,6 +22,7 @@ export const SwapDetails = ({
   networkFeeUsd,
   onSlippageChange,
 }: SwapDetailsProps) => {
+  const { t } = useTranslation();
   const [inverted, setInverted] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -34,7 +36,7 @@ export const SwapDetails = ({
           type="button"
           className="details__rate"
           onClick={() => setInverted((v) => !v)}
-          title="Invert rate"
+          title={t.invertRate}
         >
           <span>
             1 {base.symbol} = {formatTokenAmount(rate)} {quote.symbol}
@@ -67,8 +69,8 @@ export const SwapDetails = ({
 
       <div id="swap-details-body" className="details__body" hidden={!expanded}>
         <div className="details__row">
-          <span>Max slippage</span>
-          <div className="segmented" role="radiogroup" aria-label="Max slippage">
+          <span>{t.maxSlippage}</span>
+          <div className="segmented" role="radiogroup" aria-label={t.maxSlippage}>
             {SLIPPAGE_OPTIONS.map((opt) => (
               <button
                 key={opt}
@@ -84,17 +86,17 @@ export const SwapDetails = ({
           </div>
         </div>
         <div className="details__row">
-          <span>Minimum received</span>
+          <span>{t.minimumReceived}</span>
           <strong>
             {formatTokenAmount(minimumReceived)} {toToken.symbol}
           </strong>
         </div>
         <div className="details__row">
-          <span>Network fee</span>
+          <span>{t.networkFee}</span>
           <strong>{formatUsd(networkFeeUsd)}</strong>
         </div>
         <div className="details__row">
-          <span>Route</span>
+          <span>{t.route}</span>
           <strong>
             {fromToken.symbol} → {toToken.symbol}
           </strong>

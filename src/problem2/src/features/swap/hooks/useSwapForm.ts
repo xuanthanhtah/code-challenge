@@ -67,6 +67,7 @@ export const useSwapForm = ({ tokens, balances }: UseSwapFormOptions) => {
       return {
         isValid: false,
         code: 'INSUFFICIENT_BALANCE',
+        params: { symbol: fromToken.symbol },
         message: `Insufficient ${fromToken.symbol} balance`,
       };
     }

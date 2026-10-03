@@ -43,4 +43,5 @@ export interface SwapValidation {
   isValid: boolean;
   code?: SwapValidationCode;
   message?: string;
+  params?: Record<string, string>;
 }
